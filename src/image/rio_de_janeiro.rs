@@ -12,34 +12,28 @@ pub fn rio_de_janeiro(input_img: VipsImage) -> Result<VipsImage, Error> {
     let janeiro = VipsImage::thumbnail_with_opts(
         "assets/janeiro.v",
         width,
-        VOption::new()
-            .set("height", height)
-            .set("size", 3)
+        VOption::new().set("height", height).set("size", 3),
     )?;
-    let text = VipsImage::thumbnail(
-        "assets/janeiro_text.v",
-        width * 3 / 7
-    )?;
-    let v = (0..num_pages).map(|i| {
-        input_img
-            .crop(0, i * height, width, height).unwrap()
-            .composite2(
-                &janeiro,
-                ops::BlendMode::Over
-            ).unwrap()
-            .composite2_with_opts(
-                &text,
-                ops::BlendMode::Over,
-                VOption::new()
-                    .set("x", (width - text.get_width()) / 2)
-                    .set("y", height * 3 / 7)
-            ).unwrap()
-    }).collect_vec();
-    let output = VipsImage::arrayjoin_with_opts(
-        v.as_slice(),
-        VOption::new()
-            .set("across", 1),
-    )?;
+    let text = VipsImage::thumbnail("assets/janeiro_text.v", width * 3 / 7)?;
+    let v = (0..num_pages)
+        .map(|i| {
+            input_img
+                .crop(0, i * height, width, height)
+                .unwrap()
+                .composite2(&janeiro, ops::BlendMode::Over)
+                .unwrap()
+                .composite2_with_opts(
+                    &text,
+                    ops::BlendMode::Over,
+                    VOption::new()
+                        .set("x", (width - text.get_width()) / 2)
+                        .set("y", height * 3 / 7),
+                )
+                .unwrap()
+        })
+        .collect_vec();
+    let mut output = VipsImage::arrayjoin_with_opts(v.as_slice(), VOption::new().set("across", 1))?;
     output.set_int("page-height", height)?;
     Ok(output)
 }
+

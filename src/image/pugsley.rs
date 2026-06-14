@@ -138,7 +138,7 @@ pub(crate) fn pugsley(mut input_img: VipsImage) -> Result<VipsImage, Error> {
     frames.append(&mut screenshake);
 
 
-    let output = VipsImage::arrayjoin_with_opts(
+    let mut output = VipsImage::arrayjoin_with_opts(
         frames.as_slice(),
         VOption::new()
             .set("across", 1)

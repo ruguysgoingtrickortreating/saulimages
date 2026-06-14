@@ -13,6 +13,20 @@ pub enum Operation {
     Papyrus(String),
 }
 
+#[derive(Debug, strum::Display)]
+pub enum ImageArg {
+    Color(u8, u8, u8),
+    BackgroundColor(u8, u8, u8),
+    Alignment(Alignment),
+}
+
+#[derive(Debug)]
+pub enum Alignment {
+    Left,
+    Center,
+    Right
+}
+
 pub fn init(name: &str) {
     rs_vips::Vips::init(name).unwrap();
 }

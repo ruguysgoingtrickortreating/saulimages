@@ -13,7 +13,6 @@ pub fn caption(mut input_img: VipsImage, caption: &str) -> Result<VipsImage, Err
         input_img = input_img.addalpha()?;
     }
 
-
     let width = input_img.get_width();
     let size = width / 10;
     let page_height = input_img.get_page_height();
@@ -31,38 +30,45 @@ pub fn caption(mut input_img: VipsImage, caption: &str) -> Result<VipsImage, Err
             .set("width", text_width),
     )?;
 
-    let mut img_caption = txt_img
-        .relational(                        // i am not sure why this code line down to the other comment even exist
+    let img_caption = txt_img
+        .relational(
+            // i am not sure why this code line down to the other comment even exist
             &VipsImage::black(txt_img.get_width(), txt_img.get_height())?,
-            ops::OperationRelational::Equal)?
+            ops::OperationRelational::Equal,
+        )?
         .bandbool(ops::OperationBoolean::And)?
         .ifthenelse(
             &VipsImage::new_from_image(
                 &VipsImage::black(txt_img.get_width(), txt_img.get_height())?,
                 &[255.0],
             )?,
-            &txt_img)?  // honestly gravity should suffice but esmbot does it so so do i
+            &txt_img,
+        )? // honestly gravity should suffice but esmbot does it so so do i
         .gravity_with_opts(
             ops::CompassDirection::Centre,
-            width, txt_img.get_height() + size,
+            width,
+            txt_img.get_height() + size,
             VOption::new().set("extend", "white"),
         )?;
-    
+
     let output = if num_pages == 1 {
         img_caption.join(&input_img, ops::Direction::Vertical)?
     } else {
-        let v = (0..num_pages).into_iter().map(|i| {
-            let slice = input_img.crop(0, i * page_height, width, page_height).unwrap();
-            img_caption.join(&slice, ops::Direction::Vertical).unwrap()
-        }).collect_vec();
-        let output = VipsImage::arrayjoin_with_opts(
-            v.as_slice(),
-            VOption::new()
-                .set("across", 1),
-        )?;
+        let v = (0..num_pages)
+            .into_iter()
+            .map(|i| {
+                let slice = input_img
+                    .crop(0, i * page_height, width, page_height)
+                    .unwrap();
+                img_caption.join(&slice, ops::Direction::Vertical).unwrap()
+            })
+            .collect_vec();
+        let mut output =
+            VipsImage::arrayjoin_with_opts(v.as_slice(), VOption::new().set("across", 1))?;
         output.set_int("page-height", page_height + img_caption.get_height())?;
         output
     };
 
     Ok(output)
 }
+
